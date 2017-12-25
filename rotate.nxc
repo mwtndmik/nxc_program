@@ -1,0 +1,11 @@
+task main(){
+  int t=0;
+
+  while(t<10){
+    OnFwd(OUT_A,100);
+    OnFwd(OUT_C,10);
+    t = t+1;
+  }
+}
+
+//1万回ループが4.4秒くらい

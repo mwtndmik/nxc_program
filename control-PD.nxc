@@ -1,0 +1,216 @@
+//本番環境 黒：30 白：70  P:4.6 -> 1.84
+//部室環境 43 73
+
+#define BLACK 43  //ラインの色の値
+#define WHITE 73  //コースの色の値
+#define P_GAIN 2.49  //比例制御のパラメーター
+#define D_GAIN 0.11  //微分制御のパラメーター
+#define turn_left OnRev(OUT_A,100);OnRev(OUT_C,slow);
+#define turn_right OnRev(OUT_C,100);OnRev(OUT_A,slow);
+#define LIGHT Sensor(IN_1)
+int music = 0;
+
+#define DO 262
+#define RE 294
+#define MI 330
+#define FA 349
+#define SO 359
+#define RA 440
+#define SI 494
+#define HDO 523
+#define HRE 587
+#define SDO 277
+#define SRE 311
+#define SFA 370
+#define SSO 415
+#define SRA 466
+
+
+task play_music()
+{
+while(true){
+if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(500);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(500);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(250);if(music==0)
+PlayTone(SO,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(500);if(music==0)
+
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(500);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(500);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(250);if(music==0)
+PlayTone(SO,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(500);if(music==0)
+
+PlayTone(HRE,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(500);if(music==0)
+PlayTone(HRE,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(500);if(music==0)
+PlayTone(HRE,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(HRE,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(500);if(music==0)
+
+PlayTone(HRE,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(500);if(music==0)
+PlayTone(HRE,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(500);if(music==0)
+PlayTone(HRE,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(RA,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(HRE,200);Wait(250);if(music==0)
+PlayTone(HDO,200);Wait(250);if(music==0)
+PlayTone(SI,200);Wait(500);if(music==0)
+
+}
+}
+
+
+task main(){
+  start play_music;
+  int black = BLACK;
+  int white = WHITE;
+  float p_gain = P_GAIN;
+  float d_gain = D_GAIN;
+  int gray = (black + white) / 2;
+
+  float turn;  //回転値
+  float slow;  //回転方向の制御値
+  int L_forward;  //過去のセンサーの値
+  int L_present;  //現在センサーの値
+  int counter = 0;  //white制御の連続回数 -> 探索モードへ移行
+
+  SetSensorLight(IN_1);
+
+  while(true){
+  L_present = LIGHT;
+
+  //反時計回りライントレース
+  music = 0;
+  while(counter < 450){
+
+    L_forward = L_present;
+    L_present = LIGHT;
+
+    turn = (p_gain * (L_present - gray) + d_gain * (L_present - L_forward))*100.0/(white - black);
+
+    //black -> turn right
+    if(turn < 0.0){
+      if(turn < -93.0){
+        slow = 7.0;
+      }
+      else{
+        slow = 100.0 + turn;
+
+      }
+      turn_right;
+
+      counter = 0;
+    }
+
+    //white -> turn left
+    else{
+      if(turn > 93.0){
+        slow = 7.0;
+      }
+      else{
+        slow = 100 - turn;
+      }
+      turn_left;
+
+      counter = counter + 1;
+    }
+    Wait(3);
+  }
+
+  counter = 0;
+
+  //脱線検知 & 探索モード
+  music = 1;
+  while(LIGHT > gray){
+
+    OnRev(OUT_C,50); OnRev(OUT_A,17);
+  }
+
+  L_present = LIGHT;
+
+  //時計回りライントレース
+  music = 0;
+  while(counter < 450){
+
+    L_forward = L_present;
+    L_present = LIGHT;
+
+    turn = (p_gain * (L_present - gray) + d_gain * (L_present - L_forward))*100.0/(white - black);
+
+    //black -> turn left
+    if(turn < 0.0){
+      if(turn < -93.0){
+        slow = 7.0;
+      }
+      else{
+        slow = 100.0 + turn;
+
+      }
+      turn_left;
+
+      counter = 0;
+    }
+
+    //white -> turn right
+    else{
+      if(turn > 93.0){
+        slow = 7.0;
+      }
+      else{
+        slow = 100 - turn;
+      }
+      turn_right;
+
+      counter = counter + 1;
+    }
+    Wait(3);
+  }
+
+  counter = 0;
+
+  //脱線検知 & 探索モード
+  music = 1;
+  while(LIGHT > gray){
+
+    OnRev(OUT_A,50); OnRev(OUT_C,17);
+  }
+}
+}

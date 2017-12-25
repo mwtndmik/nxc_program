@@ -1,0 +1,35 @@
+#define turn_left OnRev(OUT_A,100);OnRev(OUT_C,slow); //左回転
+#define turn_right OnRev(OUT_C,100);OnRev(OUT_A,slow); //右回転
+#define LIGHT Sensor(IN_1)
+
+while(counter < cset){
+  L_forward = L_present;
+  L_present = LIGHT;
+
+  if(L_present - L_forward < -2){ //黒の急な回転に対応
+  OnRev(OUT_C,100); OnFwd(OUT_A,100);Wait(10);
+  L_forward = L_present;
+  L_present = LIGHT;}
+
+  turn = (p_gain * (L_present - gray) + d_gain * (L_present - L_forward))*100.0/(white - black); //※3 旋回値計算
+
+  //black -> turn right
+  if(turn < 0.0){
+    if(turn < bset){
+      slow = b_min;}
+    else{
+      slow = 100.0 + turn;}//※4 車輪回転値計算
+    turn_right;
+
+    counter = 0;}
+
+  //white -> turn left
+  else{
+    if(turn > wset){
+      slow = w_min;}
+    else{
+      slow = 100 - turn;} //※4 車輪回転値計算
+    turn_left;
+
+    counter = counter + 1;} //白判定を数え上げる
+  Wait(3);}

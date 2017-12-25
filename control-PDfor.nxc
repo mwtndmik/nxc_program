@@ -1,0 +1,107 @@
+//本番環境 黒：30 白：70
+
+#define BLACK 30  //ラインの色の値
+#define WHITE 70  //コースの色の値
+#define P_GAIN 5.0  //比例制御のパラメーター
+#define D_GAIN 6.0  //微分制御のパラメーター
+#define turn_left OnRev(OUT_A,100);OnRev(OUT_C,slow);
+#define turn_right OnRev(OUT_C,100);OnRev(OUT_A,slow);
+#define LIGHT Sensor(IN_1)
+
+task main(){
+  int black = BLACK;
+  int white = WHITE;
+  float p_gain = P_GAIN;
+  float d_gain = D_GAIN;
+  int gray = (black + white) / 2;
+
+  int turn;  //回転値
+  int slow;  //回転方向の制御値
+  int L_forward;  //過去のセンサーの値
+  int L_present;  //現在センサーの値
+  int counter = 0;  //white制御の連続回数 -> 探索モードへ移行
+
+  SetSensorLight(IN_1);
+
+  while(true){
+  L_present = LIGHT;
+
+  //反時計回りライントレース
+  for(counter = 0; true){
+    L_forward = L_present;
+    L_present = LIGHT;
+    turn = p_gain * (L_present - gray) + d_gain * (L_present - L_forward);
+
+    //black -> turn right
+    if(turn < 0){
+      slow = 100 + turn;
+      turn_right;
+      Wait(100);
+
+      counter = 0;
+    }
+
+    //white -> turn left
+    else{
+      slow = 100 - turn;
+      turn_left;
+      Wait(100);
+
+      counter = counter + 1;
+    }
+  }
+
+  counter = 0;
+
+  //脱線検知 & 探索モード
+  while(LIGHT > gray){
+    PlayFileEx(“godzilla.rso”, 4, 1);
+    OnRev(OUT_C,50); OnRev(OUT_A,17);
+  }
+
+  L_present = LIGHT;
+
+  //時計回りライントレース
+  while(true){
+    L_forward = L_present;
+    L_present = LIGHT;
+    turn = p_gain * (L_present - gray) + d_gain * (L_present - L_forward);
+
+    //black -> turn left
+    if(turn < 0){
+      if(turn < -90){
+        slow = 10;
+      }
+      else{
+        slow = 100 + turn;
+      }
+
+      turn_left;
+
+      counter = 0;
+    }
+
+    //white -> turn right
+    else{
+      if(turn > 90){
+        slow = 10;
+      }
+      else{
+        slow = 100 - turn;
+      }
+      turn_right;
+
+      counter = counter + 1;
+    }
+    Wait(5);
+  }
+
+  counter = 0;
+
+  //脱線検知 & 探索モード
+  while(LIGHT > gray){
+    PlayFileEx(“godzilla.rso”, 4, 1);
+    OnRev(OUT_A,50); OnRev(OUT_C,17);
+  }
+}
+}

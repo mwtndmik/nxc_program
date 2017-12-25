@@ -1,0 +1,6 @@
+task main(){
+  while(true){
+    SetSensorLight(IN_1);
+    NumOut(50,LCD_LINE1,Sensor(IN_1));
+  }
+}

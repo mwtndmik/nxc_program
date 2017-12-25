@@ -1,0 +1,47 @@
+//反時計回りに旋回．2値制御
+//本番環境 黒：30 白：70
+
+#define BLACK 30
+#define WHITE 70
+#define turn_left OnRev(OUT_A,100);OnRev(OUT_C,slow);
+#define turn_right OnRev(OUT_C,100);OnRev(OUT_A,slow);
+#define LIGHT Sensor(IN_1)
+
+task main(){
+  int speed = 100;
+  int turn = 10;
+  int black = BLACK;
+  int white = WHITE;
+  int gray = (black + white) / 2;
+  int slow;
+
+  SetSensorLight(IN_1);
+  //SetSensorType(S1,3);
+  //SetSensorMode(S1,SENSOR_MODE_RAW);
+
+  while(true){
+    //white -> go left
+    while(LIGHT >= gray){
+      /*if(2 * abs(LIGHT-gray) > 10){
+        slow = 2 * abs(LIGHT-white);
+      }
+      else{
+        slow = 10;
+      }*/
+      slow = 100 -  trunc(2.7 * abs(LIGHT - gray));
+      turn_left;
+    }
+
+    //black -> go right
+    while(LIGHT < gray){
+      /*if(2 * abs(LIGHT-gray) > 10){
+        slow = 2 * abs(LIGHT-white);
+      }
+      else{
+        slow = 10;
+      }*/
+      slow = 100 -  trunc(2.7 * abs(LIGHT - gray));
+      turn_right;
+    }
+  }
+}
